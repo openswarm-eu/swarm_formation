@@ -1,0 +1,6 @@
+udp_topics:
+  - name: "/uav2/hw_api/imu"
+  - name: "/uav2/os_cloud_nodelet/points"
+  - name: "/uav2/estimation_manager/gps_garmin/odom"
+topic_advertisement_rate: 100
+topic_refresh_rate: 100

@@ -1,0 +1,86 @@
+# do not modify these
+root: ./
+name: simulation
+socket_name: mrs
+attach: false
+tmux_options: -f /etc/ctu-mrs/tmux.conf
+# you can modify these export ROS_MASTER_URI='http://192.168.8.157:11311'; export ROS_IP='192.168.8.157';
+pre_window: export RUN_TYPE=simulation; export UAV_TYPE=f450; export PLATFORM_CONFIG=`rospack find mrs_uav_gazebo_simulation`/config/mrs_uav_system/$UAV_TYPE.yaml; export CUSTOM_CONFIG=./config/custom_config.yaml; export WORLD_CONFIG=./config/world_config.yaml; export NETWORK_CONFIG=./config/network_config.yaml
+startup_window: status
+windows:
+  - roscore:
+      layout: tiled
+      panes:
+        - roscore
+  # - gazebo:
+  #     layout: tiled
+  #     panes:
+  #       - waitForRos; roslaunch mrs_uav_gazebo_simulation simulation.launch world_name:=mrs_city gui:=false
+  #       - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "1 2 --$UAV_TYPE --pos-file /home/field_server_0/mrs_apptainer/user_ros_workspace/src/mrs_ingeniarius/mrs_ingeniarius_simulation/tmux/two_drones_octomap/config/position_drones.yaml --enable-rangefinder --enable-ouster model:=OS0-128 use_gpu:=True horizontal_samples:=128 update_rate:=10"
+  #       # - export UAV_NAME=a; waitForControl; gz camera -c gzclient_camera -f $UAV_NAME; history -s gz camera -c gzclient_camera -f $UAV_NAME
+  # - status:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForHw; roslaunch mrs_uav_status status.launch
+  #       - export UAV_NAME=uav2; waitForHw; mrs_ingeniarius_swarm mrs_swarm_cmd_to_goto.launch
+  - swarm:
+      layout: tiled
+      panes:
+        - export UAV_NAME=uav1; waitForRos; roslaunch ego_planner normal_hexagon.launch        
+  # - hw_api:
+  #     layout: tiled
+  #     panes:
+  #       -  export UAV_NAME=uav1; waitForTime; roslaunch mrs_uav_px4_api api.launch
+  #       -  export UAV_NAME=uav2; waitForTime; roslaunch mrs_uav_px4_api api.launch
+  # - gnss_status:
+  #     layout: tiled
+  #     panes:
+  #       -  export UAV_NAME=uav1; waitForTime; roslaunch mrs_ingeniarius_utils gnss_status_verifier.launch
+  #       -  export UAV_NAME=uav2; waitForTime; roslaunch mrs_ingeniarius_utils gnss_status_verifier.launch
+  # - core:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; export STANDALONE=true; waitForHw; roslaunch mrs_uav_core core.launch
+  #       - export UAV_NAME=uav2; export STANDALONE=true; waitForHw; roslaunch mrs_uav_core core.launch
+  # - tf_connector:
+  #     layout: tiled
+  #     panes:
+  #       - waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
+  # - automatic_start:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForHw; roslaunch mrs_uav_autostart automatic_start.launch
+  #       - export UAV_NAME=uav2; waitForHw; roslaunch mrs_uav_autostart automatic_start.launch
+  # - dcl_slam:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForControl; sleep 4; roslaunch mrs_ingeniarius_simulation run_single.launch
+  #       - export UAV_NAME=uav2; waitForControl; sleep 8; roslaunch mrs_ingeniarius_simulation run_single.launch
+  # - octomap:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForControl; roslaunch mrs_ingeniarius_simulation mrs_mapplan_octomapping.launch standalone:=true config_octomap_server:=./config/octomap_server.yaml config_octomap_planner:=./config/octomap_planner.yaml config_pcl_filter_ouster:=./config/ouster_filter_mapping.yaml world_frame_id:=uav1/odom
+  #       - export UAV_NAME=uav2; waitForControl; roslaunch mrs_ingeniarius_simulation mrs_mapplan_octomapping.launch standalone:=true config_octomap_server:=./config/octomap_server.yaml config_octomap_planner:=./config/octomap_planner.yaml config_pcl_filter_ouster:=./config/ouster_filter_mapping.yaml world_frame_id:=uav2/odom
+  # - takeoff:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard
+  #       - export UAV_NAME=uav2; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard
+  # - rviz:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForControl; rosrun rviz rviz -d ./config/rviz.rviz
+  #       - export UAV_NAME=uav2; waitForControl; roslaunch mrs_rviz_plugins rviz_interface.launch
+  # - rviz_uav_models:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForControl; roslaunch mrs_rviz_plugins load_robot.launch
+  #       - export UAV_NAME=uav2; waitForControl; roslaunch mrs_rviz_plugins load_robot.launch
+  # - layout:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForControl; sleep 3; ~/.i3/layout_manager.sh ./layout.json
+  - extra:
+    layout: tiled
+    panes:
+       - waitForRos;

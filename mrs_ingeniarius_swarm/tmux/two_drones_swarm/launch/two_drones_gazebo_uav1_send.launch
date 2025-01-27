@@ -1,0 +1,32 @@
+<?xml version="1" ?>
+<launch>
+	<!--
+	  This launch file runs a sender node, which sends topics from the local
+	  roscore over the network on port 17001.
+
+	  By default, this launch file sends topics to your local machine for
+	  testing purposes. If you want to send to another machine, use
+	    roslaunch nimbro_topic_transport sender.launch target:=other_host
+	  where other_host can be a host name or IP address.
+
+	  See udp_receiver.launch for the receiving part.
+	-->
+
+	<!-- <arg name="target" default="192.168.8.243"/> -->
+	<arg name="target" default="10.42.0.140"/>
+	<arg name="port_target" default="1998"/>
+	<arg name="robot_type" default=""/>
+	<arg name="robot_name" default="uav2"/>
+
+	<!-- The sender node -->
+	<node name="gazebo_sender" pkg="nimbro_topic_transport" type="sender" output="screen">
+
+		<!-- The destination host name or IP address -->
+		<param name="destination_addr" value="$(arg target)" />
+		<param name="port" value="$(arg port_target)" />
+
+		<!-- Load the list of topics from a YAML file -->
+		<rosparam command="load" file="$(find mrs_ingeniarius_simulation)/tmux/two_drones/nimbro/$(arg robot_name)_topics_gazebo.yaml" />
+	</node>
+
+</launch>

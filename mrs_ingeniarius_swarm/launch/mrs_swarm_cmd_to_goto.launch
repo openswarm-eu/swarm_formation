@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="UAV_NAME" default="$(optenv UAV_NAME uav1)" />
+
+  <group ns="$(arg UAV_NAME)">
+
+    <!-- Convert swarm formation cmd to goto in MRS CTU frame -->
+    <node name="mrs_ingeniarius_swarm" pkg="mrs_ingeniarius_swarm" type="swarm_cmd_to_mrs_goto" output="screen">
+        <param name="pos_cmd_topic" value="/drone_0_planning/pos_cmd"/>
+        <param name="service_name" value="$(arg UAV_NAME)/control_manager/goto"/>
+    </node>
+
+  </group> 
+
+</launch>

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<!-- export UAV_NAME="uavX" -->
+
+<launch>
+
+	<!-- tf2_ros syntax -->
+    <!-- x y z yaw pitch roll frame_id child_frame_id-->
+
+	<!-- World_map to  map-->
+  	<!-- <node pkg="tf2_ros" type="static_transform_publisher" name="$(env UAV_NAME)_world_to_map"  args="0 0 0 0 0 0 $(env UAV_NAME)/fcu world_map"/> -->
+	<node pkg="tf2_ros" type="static_transform_publisher" name="world_to_fcu"  args="0 0 0 0 0 0 uav1/fcu world"/>
+
+
+</launch>
+

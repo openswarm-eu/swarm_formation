@@ -1,0 +1,28 @@
+<launch>
+
+  <arg name="UAV_NAME" default="$(optenv UAV_NAME uav1)"/>
+
+  <arg name="drone_id"/>
+  <arg name="drone_leader"/>
+  <arg name="odom_topic"/>
+
+  <group ns="$(arg UAV_NAME)">
+    <node pkg="ego_planner" name="swarm_formation" type="ego_planner_node" output="screen">
+
+      <param name="manager/name_list" value="true"/>
+      <param name="manager/robot_names" type="yaml" value="[uav6, uav9, uav8]"/>
+
+      <param name="drone_id"  value="$(arg drone_id)"/>
+      <param name="manager/drone_id"  value="$(arg drone_id)"/>
+      <param name="manager/drone_leader"  value="$(arg drone_leader)"/>
+      
+      <remap from="~odom_world"       to="$(arg odom_topic)"/>
+      <remap from="~planning/start"   to = "/drone_$(arg drone_id)_planning/start"/>
+      <remap from="~planning/finish"  to = "/drone_$(arg drone_id)_planning/finish"/>
+
+    <rosparam file="$(find ego_planner)/config/normal_triangle.yaml"/>
+
+    </node>
+  </group> 
+
+</launch>

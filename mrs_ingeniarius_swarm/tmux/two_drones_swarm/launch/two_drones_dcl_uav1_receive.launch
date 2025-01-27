@@ -1,0 +1,14 @@
+<launch>
+
+	<arg name="port_source" default="4321"/>
+	<arg name="robot_type" default=""/>
+	<arg name="robot_name" default="uav1"/>
+	
+	<node name="$(arg robot_name)_dcl_receiver" pkg="nimbro_topic_transport" type="receiver" output="screen">
+		<!-- The port to receive packets on -->
+		<param name="port" value="$(arg port_source)" />
+
+		<!-- <param name="topic_prefix" value="recv/" /> -->
+
+	</node>
+</launch>

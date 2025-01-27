@@ -1,0 +1,6 @@
+geometry_msgs/PoseStamped pose
+---
+string status
+---
+geometry_msgs/PoseStamped current_pose
+int32 progress

@@ -1,0 +1,10 @@
+udp_topics:
+  - name: "/uav1/distributedMapping/globalDescriptors"
+  - name: "/uav1/distributedMapping/loopInfo"
+  - name: "/uav1/distributedMapping/neighborPoseEstimates"
+  - name: "/uav1/distributedMapping/neighborRotationEstimates"
+  - name: "/uav1/distributedMapping/optimizationState"
+  - name: "/uav1/distributedMapping/poseEstimateState"
+  - name: "/uav1/distributedMapping/rotationEstimateState"
+topic_advertisement_rate: 10
+topic_refresh_rate: 10

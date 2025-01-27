@@ -1,0 +1,17 @@
+<launch>
+
+	<arg name="port_source" default="1998"/>
+	<arg name="robot_type" default=""/>
+	<arg name="robot_name" default="uav2"/>
+	
+	<node name="gazebo_receiver" pkg="nimbro_topic_transport" type="receiver" output="screen">
+		<!-- The port to receive packets on -->
+		<param name="port" value="$(arg port_source)" />
+
+		<param name="topic_prefix" value="recv/" />
+		<remap from="/$(arg robot_name)/hw_api/imu" to="/recv/$(arg robot_name)/hw_api/imu"/>
+		<remap from="/$(arg robot_name)/os_cloud_nodelet/points" to="/recv/$(arg robot_name)/os_cloud_nodelet/points"/>
+		<remap from="/$(arg robot_name)/estimation_manager/gps_garmin/odom" to="/recv/$(arg robot_name)/estimation_manager/gps_garmin/odom"/>
+
+	</node>
+</launch>
