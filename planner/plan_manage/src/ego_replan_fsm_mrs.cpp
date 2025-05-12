@@ -25,12 +25,13 @@ namespace ego_planner
 
     //nh.param<bool>("manager/name_list", name_list, false);
     nh.param<std::vector<std::string>>("manager/robot_names", robot_names, std::vector<std::string>());
+    nh.param<std::string>("manager/robot_name", name_robot, std::string());
 
     number_of_robots = robot_names.size();
     ROS_INFO("Number of Robots:  %i", number_of_robots);
 
-    std::string ns = nh.getNamespace();
-    name_robot = ns.substr(1, 4); // remove '/' character
+    // std::string ns = nh.getNamespace();
+    // name_robot = ns.substr(1);
     for (size_t i = 0; i < robot_names.size(); ++i)
     {
       std::string robot_name_list = robot_names[i].c_str();

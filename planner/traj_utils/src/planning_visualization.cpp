@@ -36,9 +36,9 @@ namespace ego_planner
     for (int i=0; i<formation_size_; i++)
       swarm_odom[i] = Eigen::Vector3d::Zero();
     
-    drone_0_odom_sub_ = nh.subscribe("/uav1/estimation_manager/odom_main", 1, &PlanningVisualization::drone_0_odomeCallback, this);
-    drone_1_odom_sub_ = nh.subscribe("/uav2/estimation_manager/odom_main", 1, &PlanningVisualization::drone_1_odomeCallback, this);
-    drone_2_odom_sub_ = nh.subscribe("/uav3/estimation_manager/odom_main", 1, &PlanningVisualization::drone_2_odomeCallback, this);
+    drone_0_odom_sub_ = nh.subscribe("/drone_0_visual_slam/odom", 1, &PlanningVisualization::drone_0_odomeCallback, this);
+    drone_1_odom_sub_ = nh.subscribe("/drone_1_visual_slam/odom", 1, &PlanningVisualization::drone_1_odomeCallback, this);
+    drone_2_odom_sub_ = nh.subscribe("/drone_2_visual_slam/odom", 1, &PlanningVisualization::drone_2_odomeCallback, this);
     drone_3_odom_sub_ = nh.subscribe("/drone_3_visual_slam/odom", 1, &PlanningVisualization::drone_3_odomeCallback, this);
     drone_4_odom_sub_ = nh.subscribe("/drone_4_visual_slam/odom", 1, &PlanningVisualization::drone_4_odomeCallback, this);
     drone_5_odom_sub_ = nh.subscribe("/drone_5_visual_slam/odom", 1, &PlanningVisualization::drone_5_odomeCallback, this);

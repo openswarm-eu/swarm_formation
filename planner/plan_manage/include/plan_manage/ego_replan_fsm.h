@@ -163,9 +163,9 @@ namespace ego_planner
 
     string leader;
     int uav_number;
-    ros::Subscriber odom_sub2_, odom_sub3_;
-    void odometryCallback2(const nav_msgs::OdometryConstPtr &msg);
-    void odometryCallback3(const nav_msgs::OdometryConstPtr &msg);
+    // ros::Subscriber odom_sub2_, odom_sub3_;
+    // void odometryCallback2(const nav_msgs::OdometryConstPtr &msg);
+    // void odometryCallback3(const nav_msgs::OdometryConstPtr &msg);
 
     Eigen::Vector3d odom_pos2_, odom_vel2_, odom_acc2_; // odometry state
     Eigen::Vector3d odom_pos3_, odom_vel3_, odom_acc3_; // odometry state
