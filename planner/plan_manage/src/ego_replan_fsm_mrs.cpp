@@ -15,6 +15,7 @@ namespace ego_planner
     exec_state_ = FSM_EXEC_STATE::INIT;
     have_target_ = false;
     have_odom_ = false;
+    have_swarm_relative_pts_ = false;
     have_recv_pre_agent_ = false;
     flag_escape_emergency_ = true;
     flag_relan_astar_ = false;
@@ -30,8 +31,7 @@ namespace ego_planner
     number_of_robots = robot_names.size();
     ROS_INFO("Number of Robots:  %i", number_of_robots);
 
-    // std::string ns = nh.getNamespace();
-    // name_robot = ns.substr(1);
+    ROS_INFO("Name of Robot: %s", name_robot.c_str());
     for (size_t i = 0; i < robot_names.size(); ++i)
     {
       std::string robot_name_list = robot_names[i].c_str();
@@ -53,6 +53,7 @@ namespace ego_planner
     nh.param<bool>("distance_type", distance_type, false);
     nh.param<bool>("wait_takeoff", wait_takeoff, true);
     nh.param<bool>("wait_odom", wait_odom, true);
+    nh.param<bool>("have_swarm_relative_pts_", have_swarm_relative_pts_, false);
 
     nh.param<int>("path_number", path_number, -1);
 
@@ -65,11 +66,19 @@ namespace ego_planner
       leader_swarm = true;
     }
 
-    for (int i = 0; i < number_of_robots; i++)
+    if (have_swarm_relative_pts_ == true)
     {
-      nh.param("global_goal/relative_pos_" + to_string(i) + "/x", swarm_relative_pts_[i][0], -1.0);
-      nh.param("global_goal/relative_pos_" + to_string(i) + "/y", swarm_relative_pts_[i][1], -1.0);
-      nh.param("global_goal/relative_pos_" + to_string(i) + "/z", swarm_relative_pts_[i][2], -1.0);
+      ROS_INFO("[SWARM_FSM]: Have swarm relative points.");
+      for (int i = 0; i < number_of_robots; i++)
+      {
+        nh.param("global_goal/relative_pos_" + to_string(i) + "/x", swarm_relative_pts_[i][0], -1.0);
+        nh.param("global_goal/relative_pos_" + to_string(i) + "/y", swarm_relative_pts_[i][1], -1.0);
+        nh.param("global_goal/relative_pos_" + to_string(i) + "/z", swarm_relative_pts_[i][2], -1.0);
+      }
+    }
+    else
+    {
+      ROS_INFO("[SWARM_FSM]: Do not have swarm relative points. Waiting for the base computer.");
     }
 
     nh.param("global_goal/swarm_scale", swarm_scale_, 1.0);
@@ -82,6 +91,7 @@ namespace ego_planner
     // safety_timer_ = nh.createTimer(ros::Duration(0.05), &EGOReplanFSM::checkCollisionCallback, this);
 
     odom_sub_ = nh.subscribe("odom_world", 1, &EGOReplanFSM::odometryCallback, this);
+    relative_pos_sub_ = nh.subscribe("positions", 10, &EGOReplanFSM::poseArrayCallback, this);
 
     // poly_traj_pub_ = nh.advertise<traj_utils::PolyTraj>("planning/trajectory", 10);
     data_disp_pub_ = nh.advertise<traj_utils::DataDisp>("planning/data_display", 100);
@@ -181,6 +191,12 @@ namespace ego_planner
       receive_path_ = false;
       have_path_ = false;
 
+      if (!have_swarm_relative_pts_)
+      {
+        ROS_WARN_ONCE("[SWARM_FSM]: Waiting for swarm relative points.");
+        goto force_return; // return;
+      }
+
       if (end_pt_vector_size > 0)
       {
         ROS_INFO("[SWARM_FSM]: Execute path: %d", end_pt_vector_id);
@@ -192,6 +208,7 @@ namespace ego_planner
         have_target_ = false;
       }
 
+      ROS_WARN_ONCE("[SWARM_FSM]: Waiting for target.");
       if (!have_target_)
         goto force_return; // return;
       else
@@ -454,6 +471,21 @@ namespace ego_planner
     odom_orient_.z() = msg->pose.pose.orientation.z;
 
     have_odom_ = true;
+  }
+
+
+  void EGOReplanFSM::poseArrayCallback(const geometry_msgs::PoseArray::ConstPtr& msg)
+  {
+    ROS_INFO("Received %lu poses", msg->poses.size());
+    for (size_t i = 0; i < msg->poses.size(); ++i)
+    {
+      const auto& p = msg->poses[i].position;
+      swarm_relative_pts_[i][0] = p.x;
+      swarm_relative_pts_[i][1] = p.y;
+      swarm_relative_pts_[i][2] = p.z;
+      ROS_INFO("Pose %lu: x=%.2f, y=%.2f, z=%.2f", i, swarm_relative_pts_[i][0], swarm_relative_pts_[i][1], swarm_relative_pts_[i][2]);
+    }
+    have_swarm_relative_pts_ = true;
   }
 
   // void EGOReplanFSM::odometryCallback2(const nav_msgs::OdometryConstPtr &msg)

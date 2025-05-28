@@ -15,6 +15,7 @@
 #include <optimizer/poly_traj_optimizer.h>
 #include <plan_env/grid_map.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseArray.h>
 #include <traj_utils/DataDisp.h>
 #include <plan_manage/planner_manager.h>
 #include <traj_utils/planning_visualization.h>
@@ -85,7 +86,7 @@ namespace ego_planner
     double swarm_scale_;
 
     /* planning data */
-    bool have_trigger_, have_target_, have_odom_, have_new_target_, have_recv_pre_agent_, have_local_traj_;
+    bool have_trigger_, have_target_, have_odom_, have_swarm_relative_pts_, have_new_target_, have_recv_pre_agent_, have_local_traj_;
     FSM_EXEC_STATE exec_state_;
     int continously_called_times_{0};
 
@@ -105,7 +106,7 @@ namespace ego_planner
     /* ROS utils */
     ros::NodeHandle node_;
     ros::Timer exec_timer_, safety_timer_;
-    ros::Subscriber waypoint_sub_, odom_sub_, swarm_trajs_sub_, broadcast_bspline_sub_, trigger_sub_, assignment_sub_;
+    ros::Subscriber waypoint_sub_, odom_sub_, relative_pos_sub_, swarm_trajs_sub_, broadcast_bspline_sub_, trigger_sub_, assignment_sub_;
     ros::Publisher replan_pub_, new_pub_, poly_traj_pub_, data_disp_pub_, swarm_trajs_pub_, broadcast_bspline_pub_;
     ros::Publisher broadcast_ploytraj_pub_;
     ros::Publisher reached_pub_, start_pub_;
@@ -134,6 +135,7 @@ namespace ego_planner
     void waypointCallback(const geometry_msgs::PoseStampedPtr &msg);
     void triggerCallback(const geometry_msgs::PoseStampedPtr &msg);
     void odometryCallback(const nav_msgs::OdometryConstPtr &msg);
+    void poseArrayCallback(const geometry_msgs::PoseArray::ConstPtr& msg);
     void RecvBroadcastPolyTrajCallback(const traj_utils::PolyTrajConstPtr &msg);
     void polyTraj2ROSMsg(traj_utils::PolyTraj &msg);
     void formationWaypointCallback(const geometry_msgs::PoseStampedPtr &msg);
