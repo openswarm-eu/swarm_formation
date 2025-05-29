@@ -91,7 +91,8 @@ namespace ego_planner
     // safety_timer_ = nh.createTimer(ros::Duration(0.05), &EGOReplanFSM::checkCollisionCallback, this);
 
     odom_sub_ = nh.subscribe("odom_world", 1, &EGOReplanFSM::odometryCallback, this);
-    relative_pos_sub_ = nh.subscribe("positions", 10, &EGOReplanFSM::poseArrayCallback, this);
+    // relative_pos_sub_ = nh.subscribe("positions", 10, &EGOReplanFSM::poseArrayCallback, this);
+    relative_pos_sub_ = nh.subscribe("/asus1/swarm_formation/positions", 10, &EGOReplanFSM::poseArrayCallback, this);
 
     // poly_traj_pub_ = nh.advertise<traj_utils::PolyTraj>("planning/trajectory", 10);
     data_disp_pub_ = nh.advertise<traj_utils::DataDisp>("planning/data_display", 100);
