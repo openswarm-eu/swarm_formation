@@ -2,6 +2,8 @@
 
 #include <plan_manage/ego_replan_fsm.h>
 #include <mrs_msgs/Vec4.h>
+#include <mrs_msgs/TransformReferenceSrv.h>
+#include <mrs_msgs/ReferenceStampedSrv.h>
 
 namespace ego_planner
 {
@@ -116,6 +118,7 @@ namespace ego_planner
     client = nh.serviceClient<mrs_msgs::Vec4>("/"+ name_robot + "/control_manager/goto");
     client_octomap = nh.serviceClient<mrs_msgs::Vec4>("/"+ name_robot + "/octomap_planner/goto");
     client_octomap_stop = nh.serviceClient<std_srvs::Trigger>("/"+ name_robot + "/octomap_planner/stop");
+    client_octomap_ref = nh.serviceClient<mrs_msgs::ReferenceStampedSrv>("/"+ name_robot + "/octomap_planner/reference");
 
     // Octomap Diagnostics
     current_flag = false;
@@ -257,13 +260,20 @@ namespace ego_planner
       if ((send_service_ == false) && (leader_swarm == true))
       {
         ROS_INFO("[SWARM_FSM]: Leader calls octomap planner service.");
-        mrs_msgs::Vec4 srv;
-        srv.request.goal[0] = float(end_pt_.x());
-        srv.request.goal[1] = float(end_pt_.y());
-        srv.request.goal[2] = float(end_pt_.z());
-        srv.request.goal[3] = 0.0;  // Assuming `w` is not used for position
+        // mrs_msgs::Vec4 srv;
+        // srv.request.goal[0] = float(end_pt_.x());
+        // srv.request.goal[1] = float(end_pt_.y());
+        // srv.request.goal[2] = float(end_pt_.z());
+        // srv.request.goal[3] = 0.0;  // Assuming `w` is not used for position
 
-        if (client_octomap.call(srv)) 
+        mrs_msgs::ReferenceStampedSrv srv;
+        srv.request.header.frame_id = "uav1/utm_origin";
+        srv.request.reference.position.x = float(end_pt_.x());
+        srv.request.reference.position.y = float(end_pt_.y());
+        srv.request.reference.position.z = float(end_pt_.z());
+        srv.request.reference.heading   = 0;
+
+        if (client_octomap_ref.call(srv)) 
         {
           ROS_INFO("[SWARM_FSM]: Service call succeeded");
           if (srv.response.success == true)
@@ -481,12 +491,29 @@ namespace ego_planner
     for (size_t i = 0; i < msg->poses.size(); ++i)
     {
       const auto& p = msg->poses[i].position;
-      swarm_relative_pts_[i][0] = p.x;
-      swarm_relative_pts_[i][1] = p.y;
-      swarm_relative_pts_[i][2] = p.z;
+      if (i == 0)
+      {
+        swarm_central_pos_[0] = p.x;
+        swarm_central_pos_[1] = p.y;
+        swarm_central_pos_[2] = p.z;
+      }
+      swarm_relative_pts_[i][0] = p.x - swarm_central_pos_[0];
+      swarm_relative_pts_[i][1] = p.y - swarm_central_pos_[1];
+      swarm_relative_pts_[i][2] = p.z - swarm_central_pos_[2];
       ROS_INFO("Pose %lu: x=%.2f, y=%.2f, z=%.2f", i, swarm_relative_pts_[i][0], swarm_relative_pts_[i][1], swarm_relative_pts_[i][2]);
+      
+      Eigen::Vector3d relative_pos;
+      relative_pos << swarm_relative_pts_[i][0],
+                      swarm_relative_pts_[i][1],
+                      swarm_relative_pts_[i][2];
+      end_pt_ = swarm_central_pos_ + swarm_scale_ * relative_pos;
+
+      end_pt_vector_.push_back(end_pt_);
     }
     have_swarm_relative_pts_ = true;
+
+    end_pt_vector_size = end_pt_vector_.size();
+    ROS_INFO("[SWARM_FSM]: Number of Poses: %d", end_pt_vector_size);
   }
 
   // void EGOReplanFSM::odometryCallback2(const nav_msgs::OdometryConstPtr &msg)

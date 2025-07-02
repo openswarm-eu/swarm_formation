@@ -146,6 +146,7 @@ namespace ego_planner
     ros::ServiceClient client;
     ros::ServiceClient client_octomap;
     ros::ServiceClient client_octomap_stop;
+    ros::ServiceClient client_octomap_ref;
     ros::Subscriber octoplanner_diagnostic_sub, controller_diagnostic_sub;
     void octoplannerDiagnosticsCallback(const mrs_modules_msgs::OctomapPlannerDiagnostics &msg);
     void controllerDiagnosticsCallback(const mrs_msgs::ControlManagerDiagnostics &msg);
