@@ -4,6 +4,7 @@
 #include <mrs_msgs/Vec4.h>
 #include <mrs_msgs/TransformReferenceSrv.h>
 #include <mrs_msgs/ReferenceStampedSrv.h>
+#include <mrs_msgs/TransformPoseSrv.h>
 
 namespace ego_planner
 {
@@ -119,6 +120,8 @@ namespace ego_planner
     client_octomap = nh.serviceClient<mrs_msgs::Vec4>("/"+ name_robot + "/octomap_planner/goto");
     client_octomap_stop = nh.serviceClient<std_srvs::Trigger>("/"+ name_robot + "/octomap_planner/stop");
     client_octomap_ref = nh.serviceClient<mrs_msgs::ReferenceStampedSrv>("/"+ name_robot + "/octomap_planner/reference");
+    client_transform = nh.serviceClient<mrs_msgs::TransformPoseSrv>("/"+ name_robot + "/control_manager/transform_pose");
+    client_leader_transform = nh.serviceClient<mrs_msgs::TransformPoseSrv>("/"+ leader + "/control_manager/transform_pose");
 
     // Octomap Diagnostics
     current_flag = false;
@@ -228,7 +231,37 @@ namespace ego_planner
       name_state = "FSM" + to_string(id);
 
       Eigen::Vector3d distance_target_;
-      distance_target_ = odom_pos_ - end_pt_;
+      mrs_msgs::TransformPoseSrv srv;
+      srv.request.pose.pose.position.x = float(end_pt_(0));
+      srv.request.pose.pose.position.y = float(end_pt_(1));
+      srv.request.pose.pose.position.z = float(end_pt_(2));
+      srv.request.pose.header.stamp = ros::Time::now();
+      srv.request.pose.header.frame_id = name_robot + "/utm_navsat"; // Assuming the frame is utm_navsat
+      // ROS_INFO("[SWARM_FSM]: End point [%d]: x: %f, y: %f, z: %f", id, srv.request.pose.pose.position.x, srv.request.pose.pose.position.y, srv.request.pose.pose.position.z);
+      srv.request.pose.pose.orientation.w = 1.0; // Assuming no rotation
+      srv.request.frame_id = odom_frame_id_.c_str();
+      // ROS_INFO("[SWARM_FSM]: Requesting transform for end point [%d] in frame %s", id, odom_frame_id_.c_str());
+
+      if (client_transform.call(srv))
+      {
+        // ROS_INFO("[SWARM_FSM]: Transform service call succeeded");
+        end_pt_tf_(0) = srv.response.pose.pose.position.x;
+        end_pt_tf_(1) = srv.response.pose.pose.position.y;
+        end_pt_tf_(2) = srv.response.pose.pose.position.z;
+        // ROS_INFO("[SWARM_FSM]: End point TF [%d]: x: %f, y: %f, z: %f", id, srv.response.pose.pose.position.x, srv.response.pose.pose.position.y, srv.response.pose.pose.position.z);
+      }
+      else
+      {
+        ROS_ERROR("[SWARM_FSM]: Failed to call transform service");
+      }
+
+      // ROS_WARN_ONCE("[SWARM_FSM]: odometry position: x: %f, y: %f, z: %f", 
+      //               float(odom_pos_(0)), float(odom_pos_(1)), float(odom_pos_(2)));
+      // ROS_WARN_ONCE("[SWARM_FSM]: end point position: x: %f, y: %f, z: %f",
+      //               float(end_pt_tf_(0)), float(end_pt_tf_(1)), float(end_pt_tf_(2)));
+
+      // odom_pos_ is vector3d with x, y, z coordinates
+      distance_target_ = odom_pos_ - end_pt_tf_;
 
       // Choose the type of distance calculation (false: norm of vector, true: xy norm)
       if (distance_type == false)
@@ -267,7 +300,7 @@ namespace ego_planner
         // srv.request.goal[3] = 0.0;  // Assuming `w` is not used for position
 
         mrs_msgs::ReferenceStampedSrv srv;
-        srv.request.header.frame_id = "uav1/utm_origin";
+        srv.request.header.frame_id = name_robot + "/utm_navsat";
         srv.request.reference.position.x = float(end_pt_.x());
         srv.request.reference.position.y = float(end_pt_.y());
         srv.request.reference.position.z = float(end_pt_.z());
@@ -352,9 +385,38 @@ namespace ego_planner
         {
           geometry_msgs::PoseStamped last_pose;
           last_pose = get_path_.poses.back();
-          swarm_central_path_(0) = last_pose.pose.position.x;
-          swarm_central_path_(1) = last_pose.pose.position.y;
-          swarm_central_path_(2) = last_pose.pose.position.z;
+
+          mrs_msgs::TransformPoseSrv srv;
+          srv.request.pose.pose.position.x = float(last_pose.pose.position.x);
+          srv.request.pose.pose.position.y = float(last_pose.pose.position.y);
+          srv.request.pose.pose.position.z = float(last_pose.pose.position.z);
+          srv.request.pose.header.stamp = ros::Time::now();
+          srv.request.pose.header.frame_id = leader + "/liosam_origin"; // Assuming the frame is liosam_origin
+          ROS_INFO("[SWARM_FSM]: Last point [%d]: x: %f, y: %f, z: %f", id, srv.request.pose.pose.position.x, srv.request.pose.pose.position.y, srv.request.pose.pose.position.z);
+          srv.request.pose.pose.orientation.w = 1.0; // Assuming no rotation
+          srv.request.frame_id = leader + "/utm_navsat";
+
+          ROS_INFO("[SWARM_FSM]: Requesting transform for last pose in frame %s", srv.request.frame_id.c_str());
+
+          if (client_leader_transform.call(srv))
+          {
+            ROS_INFO("[SWARM_FSM]: Transform service call succeeded");
+            ROS_INFO("[SWARM_FSM]: Transformed last pose: x: %f, y: %f, z: %f", 
+                     float(srv.response.pose.pose.position.x), float(srv.response.pose.pose.position.y), float(srv.response.pose.pose.position.z));
+            swarm_central_path_(0) = srv.response.pose.pose.position.x;
+            swarm_central_path_(1) = srv.response.pose.pose.position.y;
+            swarm_central_path_(2) = srv.response.pose.pose.position.z;
+          }
+          else
+          {
+            ROS_ERROR("[SWARM_FSM]: Failed to call transform service");
+          }
+
+          ROS_INFO("[SWARM_FSM]: Central path: x: %f, y: %f, z: %f", 
+                   float(swarm_central_path_(0)), float(swarm_central_path_(1)), float(swarm_central_path_(2)));
+          // swarm_central_path_(0) = last_pose.pose.position.x;
+          // swarm_central_path_(1) = last_pose.pose.position.y;
+          // swarm_central_path_(2) = last_pose.pose.position.z;
 
           Eigen::Vector3d relative_pos;
           relative_pos << swarm_relative_pts_[id][0],
@@ -362,7 +424,7 @@ namespace ego_planner
                           swarm_relative_pts_[id][2];
           end_path_ = swarm_central_path_ + swarm_scale_ * relative_pos;
 
-          //ROS_INFO("[SWARM_FSM]: Final position [%d]: x: %f, y: %f, z: %f", id, float(end_path_.x()), float(end_path_.y()), float(end_path_.z()));
+          ROS_INFO("[SWARM_FSM]: Final position [%d]: x: %f, y: %f, z: %f", id, float(end_path_.x()), float(end_path_.y()), float(end_path_.z()));
           success = true;
         }
         else
@@ -390,19 +452,27 @@ namespace ego_planner
     {
       name_state = "FSM" + to_string(id);
 
-      Eigen::Vector3d distance_;
-      distance_ = odom_pos_ - end_path_;
+      // Eigen::Vector3d distance_;
+      // distance_ = odom_pos_ - end_path_;
       
       if ((send_service_exe_ == false) && (leader_swarm == false))
       {
         // ROS_INFO("[SWARM_FSM]: Call service partial target.");
-        mrs_msgs::Vec4 srv;
-        srv.request.goal[0] = float(end_path_.x());
-        srv.request.goal[1] = float(end_path_.y());
-        srv.request.goal[2] = float(end_path_.z());
-        srv.request.goal[3] = 0.0;  // Assuming `w` is not used for position
+        // mrs_msgs::Vec4 srv;
+        // srv.request.goal[0] = float(end_path_.x());
+        // srv.request.goal[1] = float(end_path_.y());
+        // srv.request.goal[2] = float(end_path_.z());
+        // srv.request.goal[3] = 0.0;  // Assuming `w` is not used for position
 
-        if (client_octomap.call(srv)) 
+        mrs_msgs::ReferenceStampedSrv srv;
+        srv.request.header.frame_id = name_robot + "/utm_navsat";
+        srv.request.reference.position.x = float(end_path_.x());
+        srv.request.reference.position.y = float(end_path_.y());
+        srv.request.reference.position.z = float(end_path_.z());
+        srv.request.reference.heading   = 0;
+
+        if (client_octomap_ref.call(srv)) 
+        // if (client_octomap.call(srv)) 
         {
           // ROS_INFO("[SWARM_FSM]: Service call succeeded");
           send_service_exe_ = true;
@@ -480,6 +550,8 @@ namespace ego_planner
     odom_orient_.x() = msg->pose.pose.orientation.x;
     odom_orient_.y() = msg->pose.pose.orientation.y;
     odom_orient_.z() = msg->pose.pose.orientation.z;
+
+    odom_frame_id_ = msg->header.frame_id;
 
     have_odom_ = true;
   }

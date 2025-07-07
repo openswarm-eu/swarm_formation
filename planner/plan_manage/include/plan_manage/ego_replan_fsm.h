@@ -91,11 +91,12 @@ namespace ego_planner
     int continously_called_times_{0};
 
     Eigen::Vector3d odom_pos_, odom_vel_, odom_acc_; // odometry state
+    string odom_frame_id_;
     Eigen::Quaterniond odom_orient_;
 
-    Eigen::Vector3d init_pt_, start_pt_, start_vel_, start_acc_, start_yaw_; // start state
-    Eigen::Vector3d end_pt_, end_vel_;                                       // goal state
-    Eigen::Vector3d local_target_pt_, local_target_vel_;                     // local target state
+    Eigen::Vector3d init_pt_, start_pt_, start_vel_, start_acc_, start_yaw_;  // start state
+    Eigen::Vector3d end_pt_, end_pt_tf_, end_vel_;                            // goal state
+    Eigen::Vector3d local_target_pt_, local_target_vel_;                      // local target state
     int current_wp_;
 
     bool flag_escape_emergency_;
@@ -147,6 +148,8 @@ namespace ego_planner
     ros::ServiceClient client_octomap;
     ros::ServiceClient client_octomap_stop;
     ros::ServiceClient client_octomap_ref;
+    ros::ServiceClient client_transform;
+    ros::ServiceClient client_leader_transform;
     ros::Subscriber octoplanner_diagnostic_sub, controller_diagnostic_sub;
     void octoplannerDiagnosticsCallback(const mrs_modules_msgs::OctomapPlannerDiagnostics &msg);
     void controllerDiagnosticsCallback(const mrs_msgs::ControlManagerDiagnostics &msg);
