@@ -184,7 +184,7 @@ namespace ego_planner
     bool name_list;
     int number_of_robots;
     std::vector<std::string> robot_names;
-    std::string name_robot;
+    std::string name_robot, name_computer;
     double uav_height;
     double distance_target, distance_to_target;
     bool wait_takeoff, wait_odom;

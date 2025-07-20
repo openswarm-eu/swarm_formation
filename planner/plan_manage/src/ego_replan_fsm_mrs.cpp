@@ -30,6 +30,7 @@ namespace ego_planner
     //nh.param<bool>("manager/name_list", name_list, false);
     nh.param<std::vector<std::string>>("manager/robot_names", robot_names, std::vector<std::string>());
     nh.param<std::string>("manager/robot_name", name_robot, std::string());
+    nh.param<std::string>("manager/computer_name", name_computer, std::string());
 
     number_of_robots = robot_names.size();
     ROS_INFO("Number of Robots:  %i", number_of_robots);
@@ -95,7 +96,7 @@ namespace ego_planner
 
     odom_sub_ = nh.subscribe("odom_world", 1, &EGOReplanFSM::odometryCallback, this);
     // relative_pos_sub_ = nh.subscribe("positions", 10, &EGOReplanFSM::poseArrayCallback, this);
-    relative_pos_sub_ = nh.subscribe("/asus1/swarm_formation/positions", 10, &EGOReplanFSM::poseArrayCallback, this);
+    relative_pos_sub_ = nh.subscribe("/" + name_computer + "/swarm_formation/positions", 10, &EGOReplanFSM::poseArrayCallback, this);
 
     // poly_traj_pub_ = nh.advertise<traj_utils::PolyTraj>("planning/trajectory", 10);
     data_disp_pub_ = nh.advertise<traj_utils::DataDisp>("planning/data_display", 100);
@@ -584,8 +585,8 @@ namespace ego_planner
     }
     have_swarm_relative_pts_ = true;
 
-    end_pt_vector_size = end_pt_vector_.size();
-    ROS_INFO("[SWARM_FSM]: Number of Poses: %d", end_pt_vector_size);
+    end_pt_vector_size = 1; // end_pt_vector_.size();
+    // ROS_INFO("[SWARM_FSM]: Number of Poses: %d", end_pt_vector_size);
   }
 
   // void EGOReplanFSM::odometryCallback2(const nav_msgs::OdometryConstPtr &msg)
