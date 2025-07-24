@@ -189,6 +189,7 @@ namespace ego_planner
       }
       else
       {
+        ROS_INFO_THROTTLE(5.0, "[SWARM_FSM]: Waiting for pose/path");
         have_target_ = false;
       }
 
@@ -549,6 +550,10 @@ namespace ego_planner
     if (msg->pose.position.z < -0.1)
       return;
 
+    end_pt_vector_id = 0;
+    end_pt_vector_size = 0;
+    end_pt_vector_.clear();
+
     ROS_INFO("[SWARM_FSM]: Triggered!");
     ROS_INFO("[SWARM_FSM]: Frame ID: %s", msg->header.frame_id.c_str());
     init_pt_ = odom_pos_;
@@ -567,12 +572,26 @@ namespace ego_planner
 
     visualization_->displayGoalPoint(end_pt_, Eigen::Vector4d(0, 0.5, 0.5, 1), 0.3, 0);
 
+    // update
+    end_pt_vector_.push_back(end_pt_);
+    end_pt_vector_size = end_pt_vector_.size();
+
     have_target_ = true;
 
   }
 
   void EGOReplanFSM::formationCallback(const nav_msgs::Path::ConstPtr& msg)
   {
+    end_pt_vector_id = 0;
+    end_pt_vector_size = 0;
+    end_pt_vector_.clear();
+
+    if (msg->poses.empty())
+    {
+      ROS_WARN("[SWARM_FSM]: Received empty path.");
+      return;
+    }
+
     std::vector<geometry_msgs::PoseStamped> poses = extractPosesFromPath(*msg);
     
     int j, path;
