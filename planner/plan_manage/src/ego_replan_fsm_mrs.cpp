@@ -64,6 +64,9 @@ namespace ego_planner
     ROS_INFO("Height: %f", uav_height);
     ROS_INFO("Minimum stopping distance: %f", distance_target);
 
+    nh.param<std::string>("local_frame", local_frame, std::string());
+    nh.param<std::string>("global_frame", global_frame, std::string());
+
     leader_swarm = false;
     if (id == 0)
     {
@@ -237,7 +240,7 @@ namespace ego_planner
       srv.request.pose.pose.position.y = float(end_pt_(1));
       srv.request.pose.pose.position.z = float(end_pt_(2));
       srv.request.pose.header.stamp = ros::Time::now();
-      srv.request.pose.header.frame_id = name_robot + "/utm_navsat"; // Assuming the frame is utm_navsat
+      srv.request.pose.header.frame_id = name_robot + "/" + global_frame; 
       // ROS_INFO("[SWARM_FSM]: End point [%d]: x: %f, y: %f, z: %f", id, srv.request.pose.pose.position.x, srv.request.pose.pose.position.y, srv.request.pose.pose.position.z);
       srv.request.pose.pose.orientation.w = 1.0; // Assuming no rotation
       srv.request.frame_id = odom_frame_id_.c_str();
@@ -301,7 +304,7 @@ namespace ego_planner
         // srv.request.goal[3] = 0.0;  // Assuming `w` is not used for position
 
         mrs_msgs::ReferenceStampedSrv srv;
-        srv.request.header.frame_id = name_robot + "/utm_navsat";
+        srv.request.header.frame_id = name_robot + "/" + global_frame;
         srv.request.reference.position.x = float(end_pt_.x());
         srv.request.reference.position.y = float(end_pt_.y());
         srv.request.reference.position.z = float(end_pt_.z());
@@ -392,10 +395,10 @@ namespace ego_planner
           srv.request.pose.pose.position.y = float(last_pose.pose.position.y);
           srv.request.pose.pose.position.z = float(last_pose.pose.position.z);
           srv.request.pose.header.stamp = ros::Time::now();
-          srv.request.pose.header.frame_id = leader + "/liosam_origin"; // Assuming the frame is liosam_origin
+          srv.request.pose.header.frame_id = leader + "/" + local_frame; 
           ROS_INFO("[SWARM_FSM]: Last point [%d]: x: %f, y: %f, z: %f", id, srv.request.pose.pose.position.x, srv.request.pose.pose.position.y, srv.request.pose.pose.position.z);
           srv.request.pose.pose.orientation.w = 1.0; // Assuming no rotation
-          srv.request.frame_id = leader + "/utm_navsat";
+          srv.request.frame_id = leader + "/" + global_frame;
 
           ROS_INFO("[SWARM_FSM]: Requesting transform for last pose in frame %s", srv.request.frame_id.c_str());
 
@@ -466,7 +469,7 @@ namespace ego_planner
         // srv.request.goal[3] = 0.0;  // Assuming `w` is not used for position
 
         mrs_msgs::ReferenceStampedSrv srv;
-        srv.request.header.frame_id = name_robot + "/utm_navsat";
+        srv.request.header.frame_id = name_robot + "/" + global_frame;
         srv.request.reference.position.x = float(end_path_.x());
         srv.request.reference.position.y = float(end_path_.y());
         srv.request.reference.position.z = float(end_path_.z());
