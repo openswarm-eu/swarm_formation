@@ -211,7 +211,7 @@ namespace ego_planner
       if (end_pt_vector_size > 0)
       {
         ROS_INFO("[SWARM_FSM]: Execute path: %d", end_pt_vector_id);
-        end_pt_ = end_pt_vector_[end_pt_vector_id];
+        end_pt_ = end_pt_vector_[id];
         have_target_ = true;
       }
       else
@@ -289,6 +289,7 @@ namespace ego_planner
         dist_target = false;
         end_pt_vector_id ++;
         end_pt_vector_size--;
+        end_pt_vector_.clear();
         changeFSMExecState(WAIT_TARGET, name_state);
         break;
       }
@@ -390,31 +391,35 @@ namespace ego_planner
           geometry_msgs::PoseStamped last_pose;
           last_pose = get_path_.poses.back();
 
-          mrs_msgs::TransformPoseSrv srv;
-          srv.request.pose.pose.position.x = float(last_pose.pose.position.x);
-          srv.request.pose.pose.position.y = float(last_pose.pose.position.y);
-          srv.request.pose.pose.position.z = float(last_pose.pose.position.z);
-          srv.request.pose.header.stamp = ros::Time::now();
-          srv.request.pose.header.frame_id = leader + "/" + local_frame; 
-          ROS_INFO("[SWARM_FSM]: Last point [%d]: x: %f, y: %f, z: %f", id, srv.request.pose.pose.position.x, srv.request.pose.pose.position.y, srv.request.pose.pose.position.z);
-          srv.request.pose.pose.orientation.w = 1.0; // Assuming no rotation
-          srv.request.frame_id = leader + "/" + global_frame;
+          // mrs_msgs::TransformPoseSrv srv;
+          // srv.request.pose.pose.position.x = float(last_pose.pose.position.x);
+          // srv.request.pose.pose.position.y = float(last_pose.pose.position.y);
+          // srv.request.pose.pose.position.z = float(last_pose.pose.position.z);
+          // srv.request.pose.header.stamp = ros::Time::now();
+          // srv.request.pose.header.frame_id = leader + "/" + local_frame; 
+          // ROS_INFO("[SWARM_FSM]: Last point [%d]: x: %f, y: %f, z: %f", id, srv.request.pose.pose.position.x, srv.request.pose.pose.position.y, srv.request.pose.pose.position.z);
+          // srv.request.pose.pose.orientation.w = 1.0; // Assuming no rotation
+          // srv.request.frame_id = leader + "/" + global_frame;
 
-          ROS_INFO("[SWARM_FSM]: Requesting transform for last pose in frame %s", srv.request.frame_id.c_str());
+          // ROS_INFO("[SWARM_FSM]: Requesting transform for last pose in frame %s", srv.request.frame_id.c_str());
 
-          if (client_leader_transform.call(srv))
-          {
-            ROS_INFO("[SWARM_FSM]: Transform service call succeeded");
-            ROS_INFO("[SWARM_FSM]: Transformed last pose: x: %f, y: %f, z: %f", 
-                     float(srv.response.pose.pose.position.x), float(srv.response.pose.pose.position.y), float(srv.response.pose.pose.position.z));
-            swarm_central_path_(0) = srv.response.pose.pose.position.x;
-            swarm_central_path_(1) = srv.response.pose.pose.position.y;
-            swarm_central_path_(2) = srv.response.pose.pose.position.z;
-          }
-          else
-          {
-            ROS_ERROR("[SWARM_FSM]: Failed to call transform service");
-          }
+          // if (client_leader_transform.call(srv))
+          // {
+          //   ROS_INFO("[SWARM_FSM]: Transform service call succeeded");
+          //   ROS_INFO("[SWARM_FSM]: Transformed last pose: x: %f, y: %f, z: %f", 
+          //            float(srv.response.pose.pose.position.x), float(srv.response.pose.pose.position.y), float(srv.response.pose.pose.position.z));
+          //   swarm_central_path_(0) = srv.response.pose.pose.position.x;
+          //   swarm_central_path_(1) = srv.response.pose.pose.position.y;
+          //   swarm_central_path_(2) = srv.response.pose.pose.position.z;
+          // }
+          // else
+          // {
+          //   ROS_ERROR("[SWARM_FSM]: Failed to call transform service");
+          // }
+
+          swarm_central_path_(0) = float(last_pose.pose.position.x);
+          swarm_central_path_(1) = float(last_pose.pose.position.y);
+          swarm_central_path_(2) = float(last_pose.pose.position.z);
 
           ROS_INFO("[SWARM_FSM]: Central path: x: %f, y: %f, z: %f", 
                    float(swarm_central_path_(0)), float(swarm_central_path_(1)), float(swarm_central_path_(2)));
